@@ -15,17 +15,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Requirements for building the documentation
-breathe
-doxygen
-ipython
-numpydoc
-pydata-sphinx-theme=0.14
-sphinx-autobuild
-sphinx-design
-sphinx-copybutton
-sphinxcontrib-jquery
-sphinx==6.2
-# Requirement for doctest-cython
-pytest-cython
-pandas
+FROM ubuntu:noble
+
+RUN \
+  echo "debconf debconf/frontend select Noninteractive" | \
+    debconf-set-selections
+
+RUN \
+  echo 'APT::Install-Recommends "false";' > \
+    /etc/apt/apt.conf.d/disable-install-recommends
+
+ARG DEBUG
+
+RUN \
+  quiet=$([ "${DEBUG}" = "yes" ] || echo "-qq") && \
+  apt update ${quiet} && \
+  apt install -y -V ${quiet} \
+    build-essential \
+    debhelper \
+    devscripts \
+    fakeroot \
+    gnupg \
+    lsb-release && \
+  apt clean && \
+  rm -rf /var/lib/apt/lists/*
