@@ -15,19 +15,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Requirements for building the documentation
-breathe
-doxygen
-ipython
-linkify-it-py
-myst-parser
-numpydoc
-pydata-sphinx-theme=0.14
-sphinx-autobuild
-sphinx-design
-sphinx-copybutton
-sphinxcontrib-jquery
-sphinx==6.2
-# Requirement for doctest-cython
-pytest-cython
-pandas
+class TestTimestampParser < Test::Unit::TestCase
+  sub_test_case("strptime") do
+    def setup
+      @parser = Arrow::StrptimeTimestampParser.new("%Y-%m-%d")
+    end
+
+    def test_kind
+      assert_equal("strptime", @parser.kind)
+    end
+
+    def test_format
+      assert_equal("%Y-%m-%d", @parser.format)
+    end
+  end
+
+  sub_test_case("ISO8601") do
+    def setup
+      @parser = Arrow::ISO8601TimestampParser.new
+    end
+
+    def test_kind
+      assert_equal("iso8601", @parser.kind)
+    end
+  end
+end
