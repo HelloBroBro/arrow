@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,20 +17,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7
+set -e
+set -o pipefail
 
-ARG DEBUG
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <tag> <workflow>"
+    exit 1
+fi
 
-# GH-42128
-# Switch repos to point to to vault.centos.org because Centos Stream 8 is EOL
-RUN sed -i \
-  -e 's/^mirrorlist/#mirrorlist/' \
-  -e 's/^#baseurl/baseurl/' \
-  -e 's/mirror\.centos\.org/vault.centos.org/' \
-  /etc/yum.repos.d/*.repo
+TAG=$1
+WORKFLOW=$2
+REPOSITORY="apache/arrow"
 
-RUN \
-  quiet=$([ "${DEBUG}" = "yes" ] || echo "--quiet") && \
-  yum install -y ${quiet} \
-    rpmdevtools && \
-  yum clean ${quiet} all
+echo "Looking for GitHub Actions workflow on ${REPOSITORY}:${TAG}"
+RUN_ID=""
+while [[ -z "${RUN_ID}" ]]
+do
+    echo "Waiting for run to start..."
+    RUN_ID=$(gh run list \
+                --repo "${REPOSITORY}" \
+                --workflow="${WORKFLOW}" \
+                --json 'databaseId,event,headBranch,status' \
+                --jq ".[] | select(.event == \"push\" and .headBranch == \"${TAG}\") | .databaseId")
+      sleep 1
+  done
+
+echo "Found GitHub Actions workflow with ID: ${RUN_ID}"
+gh run watch --repo "${REPOSITORY}" --exit-status ${RUN_ID}

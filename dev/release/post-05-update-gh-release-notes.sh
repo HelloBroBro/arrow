@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,20 +17,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7
+set -e
+set -o pipefail
 
-ARG DEBUG
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <version>"
+    exit 1
+fi
 
-# GH-42128
-# Switch repos to point to to vault.centos.org because Centos Stream 8 is EOL
-RUN sed -i \
-  -e 's/^mirrorlist/#mirrorlist/' \
-  -e 's/^#baseurl/baseurl/' \
-  -e 's/mirror\.centos\.org/vault.centos.org/' \
-  /etc/yum.repos.d/*.repo
 
-RUN \
-  quiet=$([ "${DEBUG}" = "yes" ] || echo "--quiet") && \
-  yum install -y ${quiet} \
-    rpmdevtools && \
-  yum clean ${quiet} all
+VERSION=$1
+REPOSITORY="apache/arrow"
+TAG="apache-arrow-${VERSION}"
+WORKFLOW="release.yml"
+SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Wait for the GitHub Workflow that creates the GitHub Release
+# to finish before updating the release notes.
+. $SOURCE_DIR/utils-watch-gh-workflow.sh ${TAG} ${WORKFLOW}
+
+# Update the Release Notes section
+RELEASE_NOTES_URL="https://arrow.apache.org/release/${VERSION}.html"
+RELEASE_NOTES="Release Notes URL: ${RELEASE_NOTES_URL}"
+gh release edit ${TAG} --repo ${REPOSITORY} --notes "${RELEASE_NOTES}" --verify-tag

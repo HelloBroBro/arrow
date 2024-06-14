@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,20 +17,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7
+set -e
+set -o pipefail
 
-ARG DEBUG
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <version> <rc-num>"
+  exit
+fi
 
-# GH-42128
-# Switch repos to point to to vault.centos.org because Centos Stream 8 is EOL
-RUN sed -i \
-  -e 's/^mirrorlist/#mirrorlist/' \
-  -e 's/^#baseurl/baseurl/' \
-  -e 's/mirror\.centos\.org/vault.centos.org/' \
-  /etc/yum.repos.d/*.repo
-
-RUN \
-  quiet=$([ "${DEBUG}" = "yes" ] || echo "--quiet") && \
-  yum install -y ${quiet} \
-    rpmdevtools && \
-  yum clean ${quiet} all
+# Create the release tag and trigger the Publish Release workflow.
+release_candidate_tag=apache-arrow-${version}-rc${num}
+release_tag=apache-arrow-${version}
+git tag -a ${release_tag} ${release_candidate_tag}^{} -m "[Release] Apache Arrow Release ${version}"
+git push apache ${release_tag}
