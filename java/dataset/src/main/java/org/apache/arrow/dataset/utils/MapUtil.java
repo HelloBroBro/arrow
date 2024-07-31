@@ -14,18 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.arrow.dataset.utils;
 
-import org.apache.arrow.vector.compression.CompressionCodec;
+import java.util.Map;
 
-module org.apache.arrow.compression {
-  exports org.apache.arrow.compression;
+/** The utility class for Map. */
+public class MapUtil {
+  private MapUtil() {}
 
-  requires com.github.luben.zstd_jni;
-  requires org.apache.arrow.memory.core;
-  requires org.apache.arrow.vector;
-  requires org.apache.commons.compress;
-
-  // Also defined under META-INF/services to support non-modular applications
-  provides CompressionCodec.Factory with
-      org.apache.arrow.compression.CommonsCompressionFactory;
+  /**
+   * Convert the map to string array as JNI bridge.
+   *
+   * @param config config map
+   * @return string array for serialization
+   */
+  public static String[] convertMapToStringArray(Map<String, String> config) {
+    if (config.isEmpty()) {
+      return null;
+    }
+    String[] configs = new String[config.size() * 2];
+    int i = 0;
+    for (Map.Entry<String, String> entry : config.entrySet()) {
+      configs[i++] = entry.getKey();
+      configs[i++] = entry.getValue();
+    }
+    return configs;
+  }
 }

@@ -14,18 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.arrow.dataset.scanner;
 
-import org.apache.arrow.vector.compression.CompressionCodec;
+import org.apache.arrow.dataset.file.FileFormat;
 
-module org.apache.arrow.compression {
-  exports org.apache.arrow.compression;
+/** The file fragment scan options interface. It is used to transfer to JNI call. */
+public interface FragmentScanOptions {
+  FileFormat fileFormat();
 
-  requires com.github.luben.zstd_jni;
-  requires org.apache.arrow.memory.core;
-  requires org.apache.arrow.vector;
-  requires org.apache.commons.compress;
-
-  // Also defined under META-INF/services to support non-modular applications
-  provides CompressionCodec.Factory with
-      org.apache.arrow.compression.CommonsCompressionFactory;
+  String[] serialize();
 }

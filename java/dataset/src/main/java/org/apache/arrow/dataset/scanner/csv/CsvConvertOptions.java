@@ -14,18 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.arrow.dataset.scanner.csv;
 
-import org.apache.arrow.vector.compression.CompressionCodec;
+import java.util.Map;
+import java.util.Optional;
+import org.apache.arrow.c.ArrowSchema;
 
-module org.apache.arrow.compression {
-  exports org.apache.arrow.compression;
+public class CsvConvertOptions {
 
-  requires com.github.luben.zstd_jni;
-  requires org.apache.arrow.memory.core;
-  requires org.apache.arrow.vector;
-  requires org.apache.commons.compress;
+  private final Map<String, String> configs;
 
-  // Also defined under META-INF/services to support non-modular applications
-  provides CompressionCodec.Factory with
-      org.apache.arrow.compression.CommonsCompressionFactory;
+  private Optional<ArrowSchema> cSchema = Optional.empty();
+
+  public CsvConvertOptions(Map<String, String> configs) {
+    this.configs = configs;
+  }
+
+  public Optional<ArrowSchema> getArrowSchema() {
+    return cSchema;
+  }
+
+  public Map<String, String> getConfigs() {
+    return configs;
+  }
+
+  public void set(String key, String value) {
+    configs.put(key, value);
+  }
+
+  public void setArrowSchema(ArrowSchema cSchema) {
+    this.cSchema = Optional.of(cSchema);
+  }
 }
